@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const major = require('./Major.js');
+const subject = require('./Subject.js');
 
 const studentSchema = new mongoose.Schema({
     code: {
@@ -13,13 +15,14 @@ const studentSchema = new mongoose.Schema({
     course: Number,
     age: Number,
     major: {
-        type: mongoose.Schema.Types.Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Major',
         required: true
     },
     subjects: [{
         subject: {
-            type: Number,
+            type: mongoose.Schema.Types.ObjectId,
+            unique: true,
             ref: 'Subject'
         },
         grade: {
@@ -28,133 +31,48 @@ const studentSchema = new mongoose.Schema({
     }]
 });
 
-let studentData = [
-    {
-        code: 1,
-        name: {
-            firstname: 'Nguyễn Ngọc',
-            lastname: 'Truyện'
-        },
-        course: 46,
-        age: 21,
-        major: 1,
-        subjects: [
-            {
-                subject: 1,
-                grade: 4
-            },
-            {
-                subject: 2,
-                grade: 3.5
-            },
-            {
-                subject: 3,
-                grade: 4
+let Students = new mongoose.model('Student', studentSchema);
+
+function insertData(code, name, course, age, majorCode) {
+    major.findIDbyCode(majorCode)
+        .then(id => {
+            let studentTemp = {
+                code: code,
+                name: {
+                    firstname: name.firstname,
+                    lastname: name.lastname
+                },
+                course: course,
+                age: age,
+                major: id,
+                subjects: []
             }
-        ]
-    },
-    {
-        code: 2,
-        name: {
-            firstname: 'Đỗ Kỳ',
-            lastname: 'Duyên'
-        },
-        course: 46,
-        age: 21,
-        major: 1,
-        subjects: [
-            {
-                subject: 1,
-                grade: 4
-            },
-            {
-                subject: 2,
-                grade: 3.5
-            },
-            {
-                subject: 5,
-                grade: 3.5
-            }
-        ]
-    },
-    {
-        code: 3,
-        name: {
-            firstname: 'Nguyễn Phúc Nguyên',
-            lastname: 'Khoa'
-        },
-        course: 47,
-        age: 20,
-        major: 1,
-        subjects: [
-            {
-                subject: 1,
-                grade: 3.5
-            },
-            {
-                subject: 2,
-                grade: 3
-            },
-        ]
-    },
-    {
-        code: 4,
-        name: {
-            firstname: 'Bạch Toàn',
-            lastname: 'Mỹ'
-        },
-        course: 46,
-        age: 21,
-        major: 2,
-        subjects: [
-            {
-                subject: 1,
-                grade: 3.5
-            },
-            {
-                subject: 2,
-                grade: 3
-            },
-        ]
-    },
-    {
-        code: 5,
-        name: {
-            firstname: 'Đặng Minh',
-            lastname: 'Nhựt'
-        },
-        course: 47,
-        age: 20,
-        major: 3,
-        subjects: [
-            {
-                subject: 1,
-                grade: 3
-            },
-            {
-                subject: 2,
-                grade: 3
-            },
-            {
-                subject: 4,
-                grade: 3
-            }
-        ]
-    },
-    {
-        code: 6,
-        name: {
-            firstname: 'Lê Nguyễn Anh',
-            lastname: 'Tuấn'
-        },
-        course: 47,
-        age: 20,
-        major: 4,
-        subjects: []
-    },
-];
+
+            Students.create(studentTemp)
+                .then(() => console.log(`Thêm sinh viên ${name.lastname} thành công`))
+                .catch((err) => console.log(`Thêm sinh viên ${name.lastname} thất bại: ${err}`))
+        })
+}
+
+function findIDbyCode(code) {
+    return Students.findOne({ code: code }, '_id').then(data => data._id.toString()).catch(err => null)
+}
+
+function enteredGrade(code, subjectcode, grade) {
+    subject.findIDbyCode(subjectcode).then(id => {
+        Students.findOne({ code: code }).then(student => {
+            student.subjects.push(
+                { subject: id, grade: grade }
+            )
+
+            return student.save();
+        })
+            .then(() => console.log(`Thêm điểm học phần ${subjectcode} cho sinh viên ${code} thành công`))
+            .catch(err => console.error(`Thêm điểm thất bại ${err}`));
+    })
+}
 
 module.exports = {
-    studentData, studentSchema
+    Students, insertData, findIDbyCode, enteredGrade
 }
 

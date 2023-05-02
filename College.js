@@ -4,23 +4,26 @@ const collegeSchema = new mongoose.Schema({
     code: {
         type: Number,
         unique: true,
-        required: true
     },
     name: String
 })
 
-let collegeData = [
-    {
-        code: 1,
-        name: 'Công nghệ thông tin và truyền thông'
-    },
-    {
-        code: 2,
-        name: 'Bách khoa'
-    },
-];
+let Colleges = new mongoose.model('College', collegeSchema);
+
+function insertData(code, name) {
+    let tempCollege = {
+        code: code,
+        name: name
+    };
+
+    Colleges.create(tempCollege).then(() => console.log(`Thêm khoa ${name} thành công!`)).catch(`Thêm khoa ${name} thất bại`);
+}
+
+function findIDbyCode(code) {
+    return Colleges.findOne({ code: code }, '_id').then(data => data._id.toString()).catch(err => null)
+}
 
 module.exports = {
-    collegeSchema, collegeData
+    Colleges, insertData, findIDbyCode
 }
 

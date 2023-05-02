@@ -15,45 +15,33 @@ const subjectSchema = new mongoose.Schema({
         require: true
     },
     prerequisite: {
-        type: mongoose.Schema.Types.Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject',
         default: null,
     }
 })
 
-let subjectData = [
-    {
-        code: 1,
-        name: 'Lập trình căn bản',
-        credit_hours: 4,
-        prerequisite: null
-    },
-    {
-        code: 2,
-        name: 'Lập trình hướng đối tượng',
-        credit_hours: 3,
-        prerequisite: 1
-    },
-    {
-        code: 3,
-        name: 'Lập trình .NET',
-        credit_hours: 3,
-        prerequisite: 2
-    },
-    {
-        code: 4,
-        name: 'Lập trình vi điều khiển',
-        credit_hours: 3,
-        prerequisite: 1
-    },
-    {
-        code: 5,
-        name: 'Lập trình Java',
-        credit_hours: 3,
-        prerequisite: 2
-    }
-];
+let Subjects = mongoose.model('Subject', subjectSchema);
+
+function insertData(code, name, credit_hours, prerequisiteCode) {
+    findIDbyCode(prerequisiteCode).then(id => {
+        let subjectTemp = {
+            code: code,
+            name: name,
+            credit_hours: credit_hours,
+            prerequisite: id
+        }
+
+        Subjects.create(subjectTemp)
+            .then(() => console.log(`Thêm môn ${name} thành công`))
+            .catch((err) => console.err(`Thêm môn ${name} thất bại: ${err}`))
+    })
+}
+
+function findIDbyCode(code) {
+    return Subjects.findOne({ code: code }, '_id').then(data => data._id.toString()).catch(err => null)
+}
 
 module.exports = {
-    subjectData, subjectSchema
+    Subjects, insertData, findIDbyCode
 }
